@@ -71,4 +71,4 @@ async function main() {
 
 console.log("Starting the twitter bot ...");
 
-setInterval(main, 1000);
+setInterval(main, 60000);
