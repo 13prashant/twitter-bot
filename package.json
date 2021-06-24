@@ -4,7 +4,7 @@
   "description": "Node.js Twitter Bot",
   "main": "index.js",
   "scripts": {
-    "start": "node bot.js --port process.env.PORT"
+    "start": "node bot.js"
   },
   "author": "Prashant",
   "license": "ISC",
