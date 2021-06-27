@@ -20,7 +20,7 @@ function getTweets(since_id) {
         let params = {
             q: "@delhichatter",
             result_type: 'mixed',
-            count: 100,
+            count: 10,
         };
         if (since_id) {
             params.since_id = since_id;
