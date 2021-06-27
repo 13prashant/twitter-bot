@@ -18,7 +18,8 @@ function readParams() {
 function getTweets(since_id) {
     return new Promise((resolve, reject) => {
         let params = {
-            q: "@GaurangBhardwa1",
+            q: "@delhichatter",
+            result_type: 'mixed',
             count: 10,
         };
         if (since_id) {
