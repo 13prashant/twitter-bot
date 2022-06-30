@@ -1,15 +1,8 @@
 require("dotenv").config();
-const twit = require("twit");
+const twit = require("./twit");
 const fs = require("fs");
 const path = require("path");
 const paramsPath = path.join(__dirname, "params.json");
-
-const T = new twit({
-  consumer_key: process.env.TWITTER_API_KEY,
-  consumer_secret: process.env.TWITTER_API_SECRET,
-  access_token: process.env.TWITTER_ACCESS_TOKEN,
-  access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
-});
 
 function writeParams(data) {
   console.log("We are writing the params file ...", data);
@@ -33,7 +26,7 @@ function getTweets(since_id) {
       params.since_id = since_id;
     }
     console.log("We are getting the tweets ...", params);
-    T.get("search/tweets", params, (err, data) => {
+    twit.get("search/tweets", params, (err, data) => {
       if (err) {
         return reject(err);
       }
@@ -43,11 +36,11 @@ function getTweets(since_id) {
 }
 
 function postRetweet(id) {
-  new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     let params = {
       id,
     };
-    T.post("statuses/retweet/:id", params, (err, data) => {
+    twit.post("statuses/retweet/:id", params, (err, data) => {
       if (err) {
         return reject(err);
       }
