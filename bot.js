@@ -1,4 +1,5 @@
 require("dotenv").config();
+const { default: axios } = require("axios");
 const twit = require("./twit");
 const fs = require("fs");
 const path = require("path");
@@ -48,6 +49,102 @@ function postRetweet(id) {
     });
   });
 }
+
+async function downloadImage(url, filepath) {
+  const response = await axios({
+    url,
+    method: "GET",
+    responseType: "stream",
+  });
+  return new Promise((resolve, reject) => {
+    response.data
+      .pipe(fs.createWriteStream(filepath))
+      .on("error", reject)
+      .once("close", () => resolve(filepath));
+  });
+}
+
+// Unsplash API
+async function getImage(searchTerm) {
+  try {
+    const res = await axios.get(
+      `https://api.unsplash.com/search/photos?query=${searchTerm}`,
+      {
+        headers: {
+          Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+        },
+      }
+    );
+    const selectRandomImage =
+      res.data.results[Math.floor(Math.random() * res.data.results.length) - 1];
+    const imagePath = `./media/${searchTerm}-${Date.now()}.jpg`;
+    await downloadImage(selectRandomImage?.links.download, imagePath);
+
+    const image = {
+      success: true,
+      path: imagePath,
+      altText: selectRandomImage.alt_description || searchTerm,
+      description: selectRandomImage.description || searchTerm,
+    };
+
+    return image;
+  } catch (error) {
+    console.error("Error: ", error.message);
+  }
+}
+
+function replyToTweet(id, image) {
+  return new Promise((resolve, reject) => {
+    var b64content = fs.readFileSync(image.path, {
+      encoding: "base64",
+    });
+
+    twit.post("media/upload", { media_data: b64content }, function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      var mediaIdStr = data.media_id_string;
+      var altText = image.altText;
+      var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } };
+
+      twit.post("media/metadata/create", meta_params, function (err, data) {
+        if (err) {
+          return reject(err);
+        }
+        var params = {
+          in_reply_to_status_id: id,
+          auto_populate_reply_metadata: true,
+          status: image.description,
+          media_ids: [mediaIdStr],
+        };
+
+        twit.post("statuses/update", params, function (err, data) {
+          if (err) {
+            return reject(err);
+          }
+          return resolve(data);
+        });
+      });
+    });
+  });
+}
+
+var stream = twit.stream("statuses/filter", {
+  track: "@gaurangbot find image",
+});
+
+stream.on("tweet", async function (tweet) {
+  const image = tweet.text.split("find image")[1].trim();
+  const imageResponse = await getImage(image);
+  if (imageResponse?.success) {
+    await replyToTweet(tweet.id_str, imageResponse);
+    console.log("Successful reply " + tweet.id_str);
+  }
+  fs.unlink(imageResponse.path, function (err) {
+    if (err) return console.log(err);
+    console.log("file deleted successfully");
+  });
+});
 
 async function main() {
   try {

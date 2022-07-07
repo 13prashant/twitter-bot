@@ -10,9 +10,13 @@
   "author": "Prashant",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.27.2",
     "dotenv": "^10.0.0",
     "q": "^1.5.1",
     "request": "^2.88.2",
     "twit": "^2.2.11"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
   }
 }
