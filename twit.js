@@ -1,3 +1,4 @@
+require("dotenv").config();
 const twit = require("twit");
 
 const T = new twit({
