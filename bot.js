@@ -1,7 +1,8 @@
 require("dotenv").config();
-const twit = require("./twit");
 const fs = require("fs");
 const path = require("path");
+const twit = require("./twit");
+
 const paramsPath = path.join(__dirname, "params.json");
 
 function writeParams(data) {
@@ -18,14 +19,17 @@ function readParams() {
 function getTweets(since_id) {
   return new Promise((resolve, reject) => {
     let params = {
-      q: "@GaurangBhardwa1",
+      q: process.env.QUERY,
       result_type: "mixed",
       count: 10,
     };
+
     if (since_id) {
       params.since_id = since_id;
     }
+
     console.log("We are getting the tweets ...", params);
+
     twit.get("search/tweets", params, (err, data) => {
       if (err) {
         return reject(err);
@@ -40,6 +44,7 @@ function postRetweet(id) {
     let params = {
       id,
     };
+
     twit.post("statuses/retweet/:id", params, (err, data) => {
       if (err) {
         return reject(err);
@@ -54,7 +59,9 @@ async function main() {
     const params = readParams();
     const data = await getTweets(params.since_id);
     const tweets = data.statuses;
+
     console.log("We got the tweets", tweets.length);
+
     for await (let tweet of tweets) {
       try {
         await postRetweet(tweet.id_str);
@@ -64,6 +71,7 @@ async function main() {
       }
       params.since_id = tweet.id_str;
     }
+
     writeParams(params);
   } catch (e) {
     console.error(e);
